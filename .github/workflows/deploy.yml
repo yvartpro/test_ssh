@@ -7,22 +7,39 @@ on:
 
 jobs:
   deploy:
-
     runs-on: ubuntu-latest
 
     steps:
+      # Temporary step to verify secrets are loaded
+      # Do not worry, this will NOT expose your actual keys in the logs
+      - name: Debug Secrets Configuration
+        run: |
+          echo "Checking if VPS_HOST is set..."
+          if [ -z "${{ secrets.VPS_HOST }}" ]; then echo "❌ VPS_HOST is EMPTY"; else echo "✅ VPS_HOST is loaded"; fi
+
+          echo "Checking if VPS_USER is set..."
+          if [ -z "${{ secrets.VPS_USER }}" ]; then echo "❌ VPS_USER is EMPTY"; else echo "✅ VPS_USER is loaded (Value: ${{ secrets.VPS_USER }})"; fi
+
+          echo "Checking if VPS_PORT is set..."
+          if [ -z "${{ secrets.VPS_PORT }}" ]; then echo "❌ VPS_PORT is EMPTY"; else echo "✅ VPS_PORT is loaded"; fi
+
+          echo "Checking VPS_SSH_KEY length..."
+          if [ -z "${{ secrets.VPS_SSH_KEY }}" ]; then
+            echo "❌ VPS_SSH_KEY is EMPTY"
+          else
+            echo "✅ VPS_SSH_KEY is loaded"
+            echo "Key length in characters: ${#KEY_LENGTH}"
+          fi
+        env:
+          KEY_LENGTH: ${{ secrets.VPS_SSH_KEY }}
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1
-
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           port: ${{ secrets.VPS_PORT }}
           key: ${{ secrets.VPS_SSH_KEY }}
-
           script: |
             cd /home/yves/apps/test_ssh
-
             git pull origin deploy
-
